@@ -1,0 +1,130 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "IAMR89NJ": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudtrail.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Path": "/ctrail/",
+                "RoleName": "sampleRole"
+            }
+        },
+        "IAMP1UI75": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "FormSample",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "Stmt1510575378000",
+                            "Effect": "Allow",
+                            "Action": [
+                                "cloudwatch:ListMetrics",
+                                "cloudwatch:PutMetricAlarm"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "IAMR89NJ"
+                    }
+                ]
+            }
+        },
+        "S3B22T2E": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "BucketName": "cloudtrail-sample001"
+            }
+        },
+        "S3BP42F1V": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": {
+                    "Ref": "S3B22T2E"
+                },
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudtrail.amazonaws.com"
+                            },
+                            "Action": "s3:GetBucketAcl",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "S3B22T2E"
+                                        }
+                                    ]
+                                ]
+                            }
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudtrail.amazonaws.com"
+                            },
+                            "Action": "s3:PutObject",
+                            "Resource": {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "S3B22T2E"
+                                        },
+                                        "/AWSLogs/",
+                                        {
+                                            "Ref": "AWS::AccountId"
+                                        },
+                                        "/*"
+                                    ]
+                                ]
+                            },
+                            "Condition": {
+                                "StringEquals": {
+                                    "s3:x-amz-acl": "bucket-owner-full-control"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "CTT6TRR": {
+            "Type": "AWS::CloudTrail::Trail",
+            "Properties": {
+                "TrailName": "CloudTrailFromation001",
+                "S3BucketName": {
+                    "Ref": "S3B22T2E"
+                },
+                "IsLogging": true,
+                "IsMultiRegionTrail": true,
+                "IncludeGlobalServiceEvents": true,
+                "EnableLogFileValidation": true
+            }
+        }
+    }
+}
